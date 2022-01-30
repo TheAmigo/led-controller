@@ -19,7 +19,6 @@ try:
 except ImportError:
     HAVE_PCA = False
 
-
 # Global config
 MAX_LEVEL = 100      # Accept percentages from client
 PWM_PIN = 18         # Used if no config file is present
@@ -82,7 +81,7 @@ class LEDPWM(LEDPin):
         self.timer = None
         self.target = self.level
         self.target_time = 0
-        self.last_on_level = self.level
+        self.last_on_level = self.level if self.level > 0 else 100
         self.pintype = 'pwm'
         pinMode(self.pin, PWM_OUTPUT)
         self.fade(self.target, 0)
@@ -176,7 +175,7 @@ class LEDRGB(LEDPin):
         elif color == 'off':
             color = 'black'
         self.color = Color(color)
-        self.last_on_color = self.color
+        self.last_on_color = self.color if self.color.lightness > 0 else Color('white')
         self.pintype = 'rgb'
         pinMode(self.pins[0], OUTPUT)
         pinMode(self.pins[1], OUTPUT)
