@@ -1,0 +1,10 @@
+[Unit]
+Description=REST server for led control
+After=network-online.target
+
+[Service]
+ExecStart=/root/apps/led-controller/app.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
