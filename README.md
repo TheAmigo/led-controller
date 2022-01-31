@@ -45,15 +45,55 @@ type=onoff
 pin=24
 ```
 
-Where `type` is one of:
-- `onoff`: can only be turned on or off -- works on any GPIO pin
-- `pwm`: can be dimmed -- only works on hardware PWM pins
-- `rgb`: requires 3 GPIO pins and can be set to one of 8 colors: red, green, blue, cyan, yellow, magenta, white, black (off)
-- `pca9685`: like pwm, but for LEDs controlled by the channels of a PCA9685
-
 If no config file is found, it assumes the following:
 ```
 [led]
 type=pwm
 pin=18
+default=off
 ```
+
+## Lighting Types
+### onoff
+Configuration:
+- `type=onoff`
+- `pin=`*number*
+- `default=`*<on or off>* default is off
+
+Functions:
+- `/on` turns on the light
+- `/off` turns off the light
+
+### pwm
+Configuration:
+- `type=pwm`
+- `pin=`*number* Defaults to 18
+- `default=`*<on, off, or level>* Where *level* is a floating point nubmer between 0.0 (off) and 1.0 (full bright).  Default is off.
+
+Functions:
+- `/on` turns on the light to the most recent non-zero brightness (if none was ever set, it will go to 100%)
+- `/off` turns off the light
+- `/fade/`*level* fades the brightness from the current level to the new level over the course of 1 second
+- `/fade/`*level*`/`*duration* fades to the new level over the course of *duration* seconds
+  
+### rgb
+Configuration:
+- `type=rgb`
+- `red=`*pinNumber* Which pin controls the red part of the LED
+- `green=`*pinNumber* Which pin controls the green part of the LED
+- `blue=`*pinNumber* Which pin controls the blue part of the LED
+- `default=`*color* Initial color to use
+
+Functions:
+- `/on` turns on the light to the most recently set non-black color (white if none was ever used)
+- `/off` turns off the light
+- `/color/`*color* Change the light to the named color (e.g. red, green, blue, ... black is off)
+  
+### pca9685
+Configuration:
+- `type=pca9685`
+- `pin=`*channel* The channel number for this light, 0 - 15
+- `default=`*<on, off, or level>* Where *level* is a floating point nubmer between 0.0 (off) and 1.0 (full bright).  Default is off.
+
+Functions:
+- All the same as the **pwm** section above.
