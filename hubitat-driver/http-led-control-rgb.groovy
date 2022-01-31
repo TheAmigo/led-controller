@@ -6,7 +6,7 @@
 import groovy.json.JsonSlurper
 
 metadata {
-    definition (name: "HTTP LED Control (RGB)", namespace: "amigo", author: "Josh Harding") {
+    definition (name: "HTTP LED Control (RGB)", namespace: "amigo", author: "Josh Harding", importUrl: "https://github.com/TheAmigo/led-controller/blob/main/hubitat-driver/http-led-control-rgb.groovy") {
         capability "Switch"
         command "setColor", [
             [name: "color", type: "STRING", description: "New color to show"]

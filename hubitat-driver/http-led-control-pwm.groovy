@@ -6,7 +6,7 @@
 import groovy.json.JsonSlurper
 
 metadata {
-    definition (name: "HTTP LED Control (PWM)", namespace: "amigo", author: "Josh Harding") {
+    definition (name: "HTTP LED Control (PWM)", namespace: "amigo", author: "Josh Harding", importUrl: "https://raw.githubusercontent.com/TheAmigo/led-controller/main/hubitat-driver/http-led-control-pwm.groovy") {
         capability "Switch"
         capability "SwitchLevel"
 	}
