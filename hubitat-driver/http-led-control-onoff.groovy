@@ -8,7 +8,7 @@ import groovy.json.JsonSlurper
 metadata {
     definition (name: "HTTP LED Control (OnOff)", namespace: "amigo", author: "Josh Harding", importUrl: "https://raw.githubusercontent.com/TheAmigo/led-controller/main/hubitat-driver/http-led-control-onoff.groovy") {
         capability "Switch"
-	}
+    }
 
     preferences {
         input(name: "endpoint", type: "string", title:"REST endpoint", description: "Enter URL for the server's endpoint", required: true, displayDuringSetup: true)
@@ -42,3 +42,5 @@ def off() {
 private writeLog(String msg) {
     if (logEnable) log.debug(msg)
 }
+
+// vim: et:ts=4:ai:smartindent

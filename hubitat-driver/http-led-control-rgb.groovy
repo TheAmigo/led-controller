@@ -6,12 +6,12 @@
 import groovy.json.JsonSlurper
 
 metadata {
-    definition (name: "HTTP LED Control (RGB)", namespace: "amigo", author: "Josh Harding", importUrl: "https://github.com/TheAmigo/led-controller/blob/main/hubitat-driver/http-led-control-rgb.groovy") {
+    definition (name: "HTTP LED Control (RGB)", namespace: "amigo", author: "Josh Harding", importUrl: "https://raw.githubusercontent.com/TheAmigo/led-controller/main/hubitat-driver/http-led-control-rgb.groovy") {
         capability "Switch"
         command "setColor", [
             [name: "color", type: "STRING", description: "New color to show"]
         ]
-	}
+    }
 
     preferences {
         input(name: "endpoint", type: "string", title:"REST endpoint", description: "Enter URL for the server's endpoint", required: true, displayDuringSetup: true)
@@ -50,3 +50,5 @@ def setColor(String colorName) {
 private writeLog(String msg) {
     if (logEnable) log.debug(msg)
 }
+
+// vim: et:ts=4:ai:smartindent

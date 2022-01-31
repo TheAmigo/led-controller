@@ -9,7 +9,7 @@ metadata {
     definition (name: "HTTP LED Control (PWM)", namespace: "amigo", author: "Josh Harding", importUrl: "https://raw.githubusercontent.com/TheAmigo/led-controller/main/hubitat-driver/http-led-control-pwm.groovy") {
         capability "Switch"
         capability "SwitchLevel"
-	}
+    }
 
     preferences {
         input(name: "endpoint", type: "string", title:"REST endpoint", description: "Enter URL for the server's endpoint", required: true, displayDuringSetup: true)
@@ -48,3 +48,5 @@ def setLevel(BigDecimal level, BigDecimal fadetime=0) {
 private writeLog(String msg) {
     if (logEnable) log.debug(msg)
 }
+
+// vim: et:ts=4:ai:smartindent
