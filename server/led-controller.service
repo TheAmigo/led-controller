@@ -3,7 +3,7 @@ Description=REST server for led control
 After=network-online.target
 
 [Service]
-ExecStart=/root/apps/led-controller/app.py
+ExecStart=/usr/local/bin/led-controller.py
 Restart=always
 
 [Install]
