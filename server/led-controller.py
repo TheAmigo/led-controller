@@ -44,14 +44,35 @@ class LEDPin:
         self.pintype = 'onoff'
         pinMode(self.pin, OUTPUT)
         self.set_level()
+        self.toggling = False
 
     def on(self):
         self.level = 1
+        self.toggling = False
         return self.set_level()
 
     def off(self):
         self.level = 0
+        self.toggling = False
         return self.set_level()
+
+    def toggle(self):
+        # Figure out which way we're going
+        if self.toggling == 'off':
+            self.toggling = 'on'
+        elif self.toggling == 'on':
+            self.toggling = 'off'
+        elif self.level:
+            self.toggling = 'off'
+        else:
+            self.toggling = 'on'
+
+        result = ''
+        if self.toggling == 'on':
+            result = self.on()
+        else:
+            result = self.off()
+        return result
 
     def fade(self, target, duration):
         self.level = round(target)
@@ -81,7 +102,8 @@ class LEDPWM(LEDPin):
         self.timer = None
         self.target = self.level
         self.target_time = 0
-        self.last_on_level = self.level if self.level > 0 else 100
+        self.toggling = False
+        self.last_on_level = self.level if self.level else 100
         self.pintype = 'pwm'
         pinMode(self.pin, PWM_OUTPUT)
         self.fade(self.target, 0)
@@ -90,7 +112,7 @@ class LEDPWM(LEDPin):
         return self.fade(self.last_on_level, fade_time)
 
     def off(self, fade_time=1):
-        if self.level > 0:
+        if self.level > 0 and self.toggling == False:
             self.last_on_level = self.level
         return self.fade(0, fade_time)
 
@@ -125,6 +147,7 @@ class LEDPWM(LEDPin):
         if done:
             self.stop_timer()
             self.level = self.target
+            self.toggling = False
         else:
             self.level = step_level
             (step_time, step_level) = self.calc_next_step()
@@ -156,6 +179,11 @@ class LEDPWM(LEDPin):
     def log_level(self):
         #print(f'{datetime.now()}: {self.name} -- target={self.target} by {self.target_time}, level={self.level}')
         pass
+
+    def toggle(self):
+        if self.level and self.toggling == False:
+            self.last_on_level = self.target
+        return super().toggle()
 
     def status(self):
         return json.dumps({'level': self.target, 'switch': 'on' if self.target else 'off'})
@@ -230,6 +258,7 @@ class LEDPCA(LEDPWM):
         self.timer = None
         self.target = self.level
         self.target_time = 0
+        self.toggling = False
         self.last_on_level = self.level
         self.pintype = 'pca'
         self.fade(self.target, 0)
@@ -277,6 +306,13 @@ def turn_off(name):
     else:
         abort(404)
 
+@app.route('/<name>/toggle', methods=['GET'])
+def toggle(name):
+    if name in leds:
+        return leds[name].toggle() +'\n'
+    else:
+        abort(404)
+
 def parse_config():
     if config.sections():
         for section in config.sections():
@@ -310,8 +346,11 @@ if __name__ == '__main__':
     leds = {}
     wiringPiSetupGpio()
     if HAVE_PCA:
-        pca = PCA9685(busio.I2C(SCL, SDA))
-        pca.frequency = 1000
+        try:
+            pca = PCA9685(busio.I2C(SCL, SDA))
+            pca.frequency = 1000
+        except ValueError:
+            HAVE_PCA = False
     config = configparser.ConfigParser()
     config.read('/etc/led-controller.ini')
     parse_config()
