@@ -40,7 +40,7 @@ A sample config file is included.  Each section defines the name of an LED that 
 
 Example:
 ```
-[accent_light]
+[accent1]
 type=onoff
 pin=24
 ```
@@ -53,12 +53,36 @@ pin=18
 default=off
 ```
 
+## Usage
+Commands are sent via http to the server.  Each one starts with the name of the light to be controlled, then a command, optionally followed by parameters.  Replace `raspi` in the examples below with the name or IP address of your Pi (port 8123 is built-in to the server).
+
+### Examples:
+Turn on the light named 'accent1':
+```
+http://raspi:8123/accent1/on
+```
+
+Fade the light named 'led' from its current brightness to 50% over the next 2 seconds
+```
+http://raspi:8123/led/fade/50/2
+```
+
+PWM lights default to a 1 second fade time, even for `/on` and `/off` commands.  To Turn off a PWM light immediately, tell it to fade to 0 brightness in 0 seconds:
+```
+http://raspi:8123/led/fade/0/0
+```
+
+Turn a PWM light back on.  It will fade up to the brightness it last had before turning off in 1 second:
+```
+http://raspi:8123/led/on
+```
+
 ## Lighting Types
 ### onoff
 Configuration:
 - `type=onoff`
 - `pin=`*number*
-- `default=`*<on or off>* default is off
+- `default=`*\<on or off\>* default is off
 
 Functions:
 - `/on` turns on the light
