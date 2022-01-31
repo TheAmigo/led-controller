@@ -1,3 +1,8 @@
+/*
+ * Copyright 2022 Josh Harding
+ * Licensed under the terms of the MIT licese, see LICENSE file
+ */
+
 import groovy.json.JsonSlurper
 
 metadata {
