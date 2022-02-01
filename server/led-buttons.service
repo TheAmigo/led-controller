@@ -1,0 +1,10 @@
+[Unit]
+Description=Button listener
+After=led-controller.service
+
+[Service]
+ExecStart=/usr/local/bin/led-buttons.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
