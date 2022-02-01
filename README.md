@@ -88,18 +88,6 @@ Functions:
 - `/on` turns on the light
 - `/off` turns off the light
 
-### pwm
-Configuration:
-- `type=pwm`
-- `pin=`*number* Defaults to 18
-- `default=`*<on, off, or level>* Where *level* is a floating point nubmer between 0.0 (off) and 1.0 (full bright).  Default is off.
-
-Functions:
-- `/on` turns on the light to the most recent non-zero brightness (if none was ever set, it will go to 100%)
-- `/off` turns off the light
-- `/fade/`*level* fades the brightness from the current level to the new level over the course of 1 second
-- `/fade/`*level*`/`*duration* fades to the new level over the course of *duration* seconds
-  
 ### rgb
 Configuration:
 - `type=rgb`
@@ -113,6 +101,20 @@ Functions:
 - `/off` turns off the light
 - `/color/`*color* Change the light to the named color (e.g. red, green, blue, ... black is off)
   
+### pwm
+Configuration:
+- `type=pwm`
+- `pin=`*number* Defaults to 18
+- `default=`*<on, off, or level>* Where *level* is a floating point nubmer between 0.0 (off) and 1.0 (full bright).  Default is off.
+
+Functions:
+- `/on` turns on the light to the most recent non-zero brightness (if none was ever set, it will go to 100%)
+- `/off` turns off the light
+- `/fade/`*level* fades the brightness from the current level to the new level over the course of 1 second
+- `/fade/`*level*`/`*duration* fades to the new level over the course of *duration* seconds
+- `/upTo/`*level*`/`*duration* If the current level is less than *level*, fades up to *level* over *duration* seconds -- If at or above *leve*, does nothing.
+- `/downTo/`*level*`/`*duration* If the current level is more than *level*, fades down to *level* over *duration* seconds -- If at or below *leve*, does nothing.
+
 ### pca9685
 Configuration:
 - `type=pca9685`
