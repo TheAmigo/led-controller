@@ -125,6 +125,8 @@ class LEDPWM(LEDPin):
             print(f'{now}: {self.name} -- setting level from {self.level} to {self.target}')
             self.level = self.target
             self.set_level()
+            if self.level:
+                self.last_on_level = self.target
         else:
             print(f'{now}: {self.name} -- fading from {self.level} to {newlevel} in {fadetime} seconds')
             self.target_time = now + timedelta(seconds=fadetime)
@@ -185,6 +187,16 @@ class LEDPWM(LEDPin):
             self.last_on_level = self.target
         return super().toggle()
 
+    def downto(self, newlevel, fadetime):
+        if self.level > newlevel:
+            self.fade(newlevel, fadetime)
+        return self.status()
+
+    def upto(self, newlevel, fadetime):
+        if self.level < newlevel:
+            self.fade(newlevel, fadetime)
+        return self.status()
+
     def status(self):
         return json.dumps({'level': self.target, 'switch': 'on' if self.target else 'off'})
 
@@ -192,11 +204,11 @@ class LEDRGB(LEDPin):
     def __init__(self, name, pin_r, pin_g, pin_b, color):
         self.name = name
         if pin_r == None:
-            raise Exception(f"[{section}] missing red pin number")
+            raise Exception(f"[{name}] missing red pin number")
         if pin_g == None:
-            raise Exception(f"[{section}] missing green pin number")
+            raise Exception(f"[{name}] missing green pin number")
         if pin_b == None:
-            raise Exception(f"[{section}] missing blue pin number")
+            raise Exception(f"[{name}] missing blue pin number")
         self.pins = [int(pin_r), int(pin_g), int(pin_b)]
         if color == 'on':
             color = 'white'
@@ -270,7 +282,7 @@ class LEDPCA(LEDPWM):
 app = Flask(__name__)
 
 @app.route('/<name>/set/<int:newlevel>', methods=['GET'])
-def set_dimmer(newlevel):
+def set_dimmer(name, newlevel):
     if name in leds and newlevel <= MAX_LEVEL:
         return leds[name].fade(newlevel, 0) + '\n'
     else:
@@ -310,6 +322,24 @@ def turn_off(name):
 def toggle(name):
     if name in leds:
         return leds[name].toggle() +'\n'
+    else:
+        abort(404)
+
+@app.route('/<name>/downto/<int:newlevel>', methods=['GET'])
+@app.route('/<name>/downto/<int:newlevel>/<int:duration>', methods=['GET'])
+@app.route('/<name>/downto/<int:newlevel>/<float:duration>', methods=['GET'])
+def downto(name, newlevel, duration=1):
+    if name in leds and newlevel <= MAX_LEVEL:
+        return leds[name].downto(newlevel, duration) +'\n'
+    else:
+        abort(404)
+
+@app.route('/<name>/upto/<int:newlevel>', methods=['GET'])
+@app.route('/<name>/upto/<int:newlevel>/<int:duration>', methods=['GET'])
+@app.route('/<name>/upto/<int:newlevel>/<float:duration>', methods=['GET'])
+def upto(name, newlevel, duration=1):
+    if name in leds and newlevel <= MAX_LEVEL:
+        return leds[name].upto(newlevel, duration) +'\n'
     else:
         abort(404)
 
