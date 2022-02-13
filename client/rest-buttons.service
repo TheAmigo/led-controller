@@ -3,7 +3,7 @@ Description=Button listener
 After=led-controller.service
 
 [Service]
-ExecStart=/usr/local/bin/led-buttons.py
+ExecStart=/usr/local/bin/rest-buttons.py
 Restart=always
 
 [Install]
