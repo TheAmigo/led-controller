@@ -1,15 +1,17 @@
 # led-controller
-REST server for controlling LEDs on a Raspberry Pi.
+REST/MQTT server for controlling LEDs on a Raspberry Pi.
 
 This is something I wrote to work for my specific requirements.  It's definitely not for everyone.
 
 ## Features
+- Can listen on REST interface, MQTT topics, or both
 - Use any GPIO pins on the Pi for turning LEDs on/off.
 - Can use 3 GPIO pins to control an RGB LED (but only for the 8 basic colors)
 - Use the PWM pins for dimming LEDs.
 - LED dimming is done with the Pi's hardware, **no software PWM**.
 - Can fade to target level over specified time period.
 - Supports extra dimmable channels via add-on [PCA9685 board](https://www.adafruit.com/product/815).
+- Use 3 channels on a PCA9685 for full color control of an RGB light (or strip)
 
 ## Installation
 Install required packages:
