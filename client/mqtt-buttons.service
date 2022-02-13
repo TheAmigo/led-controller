@@ -1,0 +1,10 @@
+[Unit]
+Description=Send MQTT commands when buttons are activated
+After=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/mqtt-buttons.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
