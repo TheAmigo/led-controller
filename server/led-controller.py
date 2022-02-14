@@ -5,9 +5,6 @@
 # licensed under the terms of the MIT license, see LICENSE file
 
 # TODO:
-# - Fix error when starting without [mqtt] section in config file
-# - Use a timer so the .last_on_level/.last_on_color is only set when the
-#      level remains unchanged for 2 seconds.
 # - Allow remote config (e.g. from Hubitat)
 # - Save config changes to file
 # - Consider other functions like blink(), pulse(), strobe()
@@ -57,12 +54,14 @@ class LEDPin:
         self.pin = int(pin)
         self._def_level(level)
         self.last_on_level = self.level if self.level else 100
+        self.last_on_timer = None
         self.toggling = ''
         self._setup_cmds()
         self.err_msg = None
         self.fade({'level': self.level, 'duration': 0})
-        self._mqtt_listen()
         self._init_pin()
+        if 'mqtt' in config.sections():
+            self._mqtt_listen()
 
     def _init_pin(self):
         pinMode(self.pin, OUTPUT)
@@ -235,8 +234,7 @@ class LEDRGB(LEDPin):
             self.err_msg = 'Invalid color, using black instead'
         self.color = Color(round(color[0]), round(color[1]), round(color[2]))
         self.level = 1 if self.color.lightness else 0
-        if self.color.lightness:
-            self.last_on_color = self.color
+        self._set_last_on_timer()
         self._log_level()
         digitalWrite(self.pins[0], int(self.color[0]))
         digitalWrite(self.pins[1], int(self.color[1]))
@@ -247,6 +245,18 @@ class LEDRGB(LEDPin):
             self.on()
         else:
             self.off()
+
+    def _set_last_on_timer(self):
+        if self.last_on_timer:
+            self.last_on_timer.cancel()
+            self.last_on_timer = None
+        self.last_on_timer = Timer(2, self._set_last_on)
+        self.last_on_timer.start()
+
+    def _set_last_on(self):
+        if self.color.lightness:
+            self.last_on_color = self.color
+        self.last_on_timer = None
 
     def _log_level(self):
         print(f'{datetime.now()}: {self.name} -- setting color to {self.color.html}')
@@ -267,9 +277,9 @@ class LEDPWM(LEDPin):
         super().__init__(name, pin, level)
         self.target = self.level
         self.target_time = 0
-        self.last_on_level = self.level
-        self._setup_cmds()
-        self._init_pin()
+        #self.last_on_level = self.level
+        #self._setup_cmds()
+        #self._init_pin()
 
     def _init_pin(self):
         pinMode(self.pin, PWM_OUTPUT)
@@ -310,8 +320,6 @@ class LEDPWM(LEDPin):
         self.fade(data)
 
     def off(self, data={}):
-        if self.level > 0 and self.toggling == '':
-            self.last_on_level = self.level
         data['level'] = 0
         self.fade(data)
 
@@ -333,8 +341,6 @@ class LEDPWM(LEDPin):
             self.level = self.target
             self._set_level()
             self.toggling = ''
-            if self.level:
-                self.last_on_level = self.target
         else:
             print(f'{now}: {self.name} -- fading from {self.level} to {data["level"]} in {data["duration"]} seconds')
             self.target_time = now + timedelta(seconds=data['duration'])
@@ -389,16 +395,24 @@ class LEDPWM(LEDPin):
 
     def _set_level(self):
         self._log_level()
+        self._set_last_on_timer()
         pwmWrite(int(self.pin), int(self.level * PWM_MAX / MAX_LEVEL))
+
+    def _set_last_on_timer(self):
+        if self.last_on_timer:
+            self.last_on_timer.cancel()
+            self.last_on_timer = None
+        self.last_on_timer = Timer(2, self._set_last_on)
+        self.last_on_timer.start()
+
+    def _set_last_on(self):
+        if self.level:
+            self.last_on_level = self.level
+        self.last_on_timer = None
 
     def _log_level(self):
         #print(f'{datetime.now()}: {self.name} -- target={self.target} by {self.target_time}, level={self.level}')
         pass
-
-    def toggle(self, data=None):
-        if self.level and self.toggling == '':
-            self.last_on_level = self.target
-        super().toggle(data)
 
     def downto(self, data):
         if self.level > data['level']:
@@ -484,8 +498,7 @@ class LEDPCARGB(LEDPCA):
             self.color = Color('black')
             self.err_msg = 'Invalid color, using black instead'
         self.level = self.color.lightness
-        if self.level:
-            self.last_on_color = self.color
+        self._set_last_on_timer()
         self.led_r.level = self.color[0]
         self.led_g.level = self.color[1]
         self.led_b.level = self.color[2]
@@ -532,8 +545,6 @@ class LEDPCARGB(LEDPCA):
             self.led_g.target/100,
             self.led_b.target/100
         )
-        if self.color.lightness:
-            self.last_on_color = self.color
 
     def toggle(self, data={}):
         toggling = self.led_r.toggling + self.led_g.toggling + self.led_b.toggling
@@ -561,8 +572,6 @@ class LEDPCARGB(LEDPCA):
         except Exception:
             self.color = Color('black')
             self.err_msg = 'Invalid color, using black instead'
-        if self.color.lightness:
-            self.last_on_color = self.color
         self.fade({
             'red'  : self.color[0]*100,
             'green': self.color[1]*100,
@@ -576,6 +585,11 @@ class LEDPCARGB(LEDPCA):
             self.led_g.level/100,
             self.led_b.level/100
         )
+
+    def _set_last_on(self):
+        if self.color.lightness:
+            self.last_on_color = self.color
+        self.last_on_timer = None
 
     def _get_status(self):
         return {
