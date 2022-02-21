@@ -6,7 +6,7 @@
 import groovy.json.JsonSlurper
 
 metadata {
-    definition (name: "MQTT LED Control (PWM)", namespace: "amigo", author: "Josh Harding", importUrl: "https://raw.githubusercontent.com/TheAmigo/led-controller/main/hubitat-driver/mqtt-led-control-onoff.groovy") {
+    definition (name: "MQTT LED Control (OnOff)", namespace: "amigo", author: "Josh Harding", importUrl: "https://raw.githubusercontent.com/TheAmigo/led-controller/main/hubitat-driver/mqtt-led-control-onoff.groovy") {
         capability "Switch"
     }
 
