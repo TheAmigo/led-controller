@@ -62,6 +62,7 @@ class LEDPin:
         self._init_pin()
         if 'mqtt' in config.sections():
             self._mqtt_listen()
+        self._setup_complete = False
 
     def _init_pin(self):
         pinMode(self.pin, OUTPUT)
@@ -99,8 +100,14 @@ class LEDPin:
         print(f"MQTT subscribing to topic {self.topic}/req")
         self.client.subscribe(f"{self.topic}/req")
 
+        # At startup, get our most recent state from the broker
+        if not self._setup_complete:
+            self.client.subscribe(f"{self.topic}/resp")
+
     def _mqtt_message(self, client, userdata, msg):
         self.err_msg = None
+        if not self._setup_complete and msg.topic == f"{self.topic}/resp":
+            self._restore_state(msg)
         try:
             data = json.loads(msg.payload)
             if data['cmd'] in self.commands:
@@ -108,10 +115,28 @@ class LEDPin:
                 self.prev_status = self._get_status()
                 self.commands[data['cmd']](data)
                 self.send_status()
+            else:
+                print(f"Unknown command {data['cmd']}, ignoring")
         except json.JSONDecodeError:
             self.err_msg = 'non-json data'
         except KeyError:
             self.err_msg = 'missing or invalid cmd'
+
+    def _restore_state(self, msg):
+        data = json.loads(msg.payload)
+        try:
+            if hasattr(self, 'color') and 'color' in data:
+                self.color = Color(data['color'])
+            if 'level' in data:
+                self.level = data['level']
+            if 'duration' not in data:
+                data['duration'] = 1
+            print(f"Restoring previous state of {self.name}: {data}")
+            self.fade(data)
+        except Exception as e:
+            print(f"{self.name}._restore_state({data}): {e}")
+        self._setup_complete = True
+        self.client.unsubscribe(f"{self.topic}/resp")
 
     def _set_default_args_mqtt(self, data):
         cmd=data['cmd']
@@ -177,7 +202,7 @@ class LEDPin:
 
         status_msg = json.dumps(curr_status_json)
         if HAVE_MQTT:
-            self.client.publish(f"{self.topic}/resp", status_msg)
+            self.client.publish(f"{self.topic}/resp", status_msg, qos=2, retain=True)
         return status_msg
 
 class LEDRGB(LEDPin):
@@ -277,6 +302,7 @@ class LEDPWM(LEDPin):
         super().__init__(name, pin, level)
         self.target = self.level
         self.target_time = 0
+        self.last_on_timer = None
         #self.last_on_level = self.level
         #self._setup_cmds()
         #self._init_pin()
@@ -460,6 +486,7 @@ class LEDPCARGB(LEDPCA):
             color = 'black'
         self.color = Color(color)
         self.last_on_color = self.color if self.color.lightness > 0 else Color('white')
+        self.last_on_timer = None
 
         # Create 3 PCA LED's
         self.led_r = LEDPCA(name + "_r", pin_r, self.color[0])
@@ -479,7 +506,10 @@ class LEDPCARGB(LEDPCA):
     def _setup_cmds(self):
         super()._setup_cmds()
         self.commands.update({
-            'color' : self.set_color
+            'color'  : self.set_color,
+            'hsv'    : self.set_hsv,
+            'set_hue': self.set_hue,
+            'set_sat': self.set_sat
         })
 
         # Extra args for colors
@@ -488,7 +518,11 @@ class LEDPCARGB(LEDPCA):
                 ['red', int, 0], ['green', int, 0], ['blue', int, 0]],
             'dec': [['level', int, 10], ['duration', float, 0],
                 ['red', int, 0], ['green', int, 0], ['blue', int, 0]],
-            'color': [['color', str, 'black'], ['duration', float, 1]]
+            'color': [['color', str, 'black'], ['duration', float, 1]],
+            'hsv': [['hue', int, 0], ['saturation', int, 0],
+                ['value', int, 0], ['duration', float, 0]],
+            'set_hue': [['hue', int, 0], ['duration', float, 0]],
+            'set_sat': [['saturation', int, 0], ['duration', float, 0]]
         })
 
     def _set_color(self, data):
@@ -524,6 +558,30 @@ class LEDPCARGB(LEDPCA):
         data['green'] = max(min(int(self.color[1]*100) - data['green'], 100), 0)
         data['blue']  = max(min(int(self.color[2]*100) - data['blue'],  100), 0)
         self.fade(data)
+
+    def upto(self, data):
+        data.update({
+            'red':   max(self.color[0]*100, data['level']),
+            'green': max(self.color[1]*100, data['level']),
+            'blue':  max(self.color[2]*100, data['level']),
+            'level': 0
+        })
+        self.fade(data)
+
+    def downto(self, data):
+        data.update({
+            'red':   min(self.color[0]*100, data['level']),
+            'green': min(self.color[1]*100, data['level']),
+            'blue':  min(self.color[2]*100, data['level']),
+            'level': 0
+        })
+        self.fade(data)
+
+    def on(self, data):
+        self.fade({'color': self.last_on_color.html, 'duration': data['duration']})
+
+    def off(self, data):
+        self.fade({'color': 'black', 'duration': data['duration']})
 
     def fade(self, data={}):
         self._update_color()
@@ -572,6 +630,39 @@ class LEDPCARGB(LEDPCA):
         except Exception:
             self.color = Color('black')
             self.err_msg = 'Invalid color, using black instead'
+        self.apply_color(data)
+
+    def set_hsv(self, data=None):
+        try:
+            self.color = Color(
+                h=data['hue']/100,
+                s=data['saturation']/100,
+                v=data['value']/100
+            )
+        except Exception:
+            self.color = Color('black')
+            self.err_msg = 'Invalid color, using black instead'
+        self.apply_color(data)
+
+    def set_hue(self, data=None):
+        try:
+            h,s,v = self.color.hsv
+            self.color = Color(h=data['hue']/100, s=s, v=v)
+        except Exception:
+            self.color = Color('black')
+            self.err_msg = 'Invalid color, using black instead'
+        self.apply_color(data)
+
+    def set_sat(self, data=None):
+        try:
+            h,s,v = self.color.hsv
+            self.color = Color(h=h, s=data['saturation']/100, v=v)
+        except Exception:
+            self.color = Color('black')
+            self.err_msg = 'Invalid color, using black instead'
+        self.apply_color(data)
+
+    def apply_color(self, data=None):
         self.fade({
             'red'  : self.color[0]*100,
             'green': self.color[1]*100,
@@ -585,6 +676,7 @@ class LEDPCARGB(LEDPCA):
             self.led_g.level/100,
             self.led_b.level/100
         )
+        self.level = int(self.color.lightness * 100)
 
     def _set_last_on(self):
         if self.color.lightness:
