@@ -6,7 +6,7 @@
 import groovy.json.JsonSlurper
 
 metadata {
-    definition (name: "MQTT LED Control (PWMRGB)", namespace: "amigo", author: "Josh Harding", importUrl: "https://raw.githubusercontent.com/TheAmigo/led-controller/main/hubitat-driver/mqtt-led-control-pwmrgb.groovy") {
+    definition (name: "MQTT LED Control (RGB)", namespace: "amigo", author: "Josh Harding", importUrl: "https://raw.githubusercontent.com/TheAmigo/led-controller/main/hubitat-driver/mqtt-led-control-rgb.groovy") {
         capability "Switch"
         capability "ColorControl"
     }
