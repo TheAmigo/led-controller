@@ -116,6 +116,8 @@ Functions:
 - `/fade/`*level*`/`*duration* fades to the new level over the course of *duration* seconds
 - `/upTo/`*level*`/`*duration* If the current level is less than *level*, fades up to *level* over *duration* seconds -- If at or above *leve*, does nothing.
 - `/downTo/`*level*`/`*duration* If the current level is more than *level*, fades down to *level* over *duration* seconds -- If at or below *leve*, does nothing.
+- `/inc/`*step*`/`*duration* Increase the brightness by *step*% over the course of *duration* seconds.  Defaults to +10% in 0 seconds.
+- `/dec/`*step*`/`*duration* Decrease the brightness by *step*% over the course of *duration* seconds.  Defaults to -10% in 0 seconds.
 
 ### pca9685
 Configuration:
