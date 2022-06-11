@@ -55,7 +55,7 @@ pin=18
 default=off
 ```
 
-## Usage
+## REST Usage
 Commands are sent via http to the server.  Each one starts with the name of the light to be controlled, then a command, optionally followed by parameters.  Replace `raspi` in the examples below with the name or IP address of your Pi (port 8123 is built-in to the server).
 
 ### Examples:
