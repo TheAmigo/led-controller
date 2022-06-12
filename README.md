@@ -135,7 +135,7 @@ Q: Should I use REST or MQTT?
  - A: If you're not intimidated by setting up an MQTT broker, doing so gives the benefit of providing feedback to the Hubitat when the lighting changes.
 
 Q: Why would anyone use both REST and MQTT?
- - A: Each has its advantages.  If you run both, you can get all the advantages (collect the whole set!).  While MQTT provides feedback to the Hubitat, REST allows local buttons to work, even when your MQTT broker (or whole network) is down.
+ - A: Each has its advantages.  If you run both, you can get all the advantages (collect the whole set!).  While MQTT provides feedback to the Hubitat, REST allows local buttons to work even when your MQTT broker (or whole network) is down.
 
 
 Q: Why not support software-based dimming?
