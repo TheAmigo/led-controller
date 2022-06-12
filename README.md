@@ -38,6 +38,8 @@ To use a PCA9685, you'll also need to:
 - enable the Pi's I2C bus by using `raspi-config`
 
 ## Configuration
+The config file goes in `/etc/led-controller.ini`
+
 A sample config file is included.  Each section defines the name of an LED that will be controlled.  Under that section are the parameters for that LED.
 
 Example:
@@ -127,3 +129,14 @@ Configuration:
 
 Functions:
 - All the same as the **pwm** section above.
+
+## FAQ
+Q: Should I use REST or MQTT?
+ - A: If you're not intimidated by setting up an MQTT broker, doing so gives the benefit of providing feedback to the Hubitat when the lighting changes.
+
+Q: Why would anyone use both REST and MQTT?
+ - A: Each has its advantages.  If you run both, you can get all the advantages (collect the whole set!).  While MQTT provides feedback to the Hubitat, REST allows local buttons to work, even when your MQTT broker (or whole network) is down.
+
+
+Q: Why not support software-based dimming?
+ - A: The extra power draw, intermittent flickering, and low frequency really bother me.  Wave your hand under a software-PWM and a hardware-PWM to compare.

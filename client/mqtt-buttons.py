@@ -5,8 +5,11 @@ import sys
 import socket
 import paho.mqtt.client as mqtt
 from gpiozero import RotaryEncoder, Button
-from threading import Event
+from threading import Event, Timer
 import configparser
+
+# Delay between reconnection attempts
+recon_timer = None
 
 class InputButton:
     def __init__(self, config):
@@ -50,7 +53,12 @@ def parse_config():
                 devs[section] = InputRotary(config[section])
 
 def reconnect(client, userdata, rc):
-    client.reconnect()
+    global recon_timer
+    try:
+        client.reconnect()
+    except Exception:
+        recon_timer = Timer(5, reconnect)
+        recon_timer.start()
 
 def get_client_id(config):
     client_id = ''

@@ -62,7 +62,6 @@ class LEDPin:
         self._init_pin()
         if 'mqtt' in config.sections():
             self._mqtt_listen()
-        self._setup_complete = False
 
     def _init_pin(self):
         pinMode(self.pin, OUTPUT)
@@ -80,6 +79,7 @@ class LEDPin:
             'on'   : [['duration', float, 1]],
             'off'  : [['level', int, 0], ['duration', float, 1]],
         }
+        self._setup_complete = False
 
     def _def_level(self, level):
         self.level = 1 if level == 'on' else 0
