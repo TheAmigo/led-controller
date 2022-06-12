@@ -1,5 +1,5 @@
 [Unit]
-Description=REST server for led control
+Description=REST+MQTT server for led control
 After=network-online.target
 
 [Service]
